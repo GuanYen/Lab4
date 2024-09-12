@@ -83,5 +83,5 @@ myplot3d = function(xk, data=spruce.df){
   
   
   
-#myplot3d(17)
+myplot3d(18)
 

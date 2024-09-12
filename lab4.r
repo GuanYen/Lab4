@@ -11,7 +11,7 @@
 
 #spruce.df=myread("SPRUCE.csv")#MS pg478
 
-spruce.df = read.csv("SPRUCE.csv")
+spruce.df = read.csv("SPRUCE(1).csv")
 
 #with(spruce.df, dput(list(D=BHDiameter,H=Height), 
                      #file="spruce.dat"))
@@ -21,7 +21,7 @@ spruce.df = read.csv("SPRUCE.csv")
 #get wd
 getwd()
 
-#Top six lines
+#Bottom six lines
 tail(spruce.df)
 
 #Plot the points

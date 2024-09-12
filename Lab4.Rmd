@@ -1,0 +1,274 @@
+---
+title: "Lab4"
+author: "Jason Chen"
+date: "2024-09-12"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+# Task 1
+```{r}
+  #Get working directory
+  getwd()
+```
+# Task 2
+```{r}
+  #Reads in data from SPRUCE.csv
+  spruce = read.csv("SPRUCE(1).csv")
+  tail(spruce)
+```
+# Task 3
+## Lowess Smoother Scatter Plot
+```{r}
+  library(s20x)
+  trendscatter(Height~BHDiameter, data=spruce, f=0.5)
+```
+
+## Linear Model of spruce data
+```{r}
+  spruce.lm=with(spruce, lm(Height~BHDiameter))
+```
+## Find Residuals
+```{r}
+  height.res <- residuals(spruce.lm)
+```
+## Find Fitted values
+```{r}
+  height.fit <- fitted(spruce.lm)
+```
+## Plot residuals vs fitted
+```{r}
+  plot(x=height.fit, y=height.res)
+```
+
+## Trendscatter residuals vs fitted
+```{R}
+  trendscatter(y=height.res,x=height.fit)
+```
+
+## Shape of plot
+  The shape of the plot is parabolic and more symmetrical than the trendscatter plot. After the peak, the curve start moving downwards, while for the first plot, the slope decreases but stays positive.
+  
+## Residual plot
+```{r}
+  plot(spruce.lm, which = 1)
+```
+
+## Check normality
+```{r}
+  normcheck(spruce.lm,shapiro.wilk=TRUE)
+```
+
+## P-Value and NULL Hypothesis
+The P value of the Shapiro-Wilk test is 0.29. Since the value is greater than 0.05, we accept the NULL hypothesis because there is not enough data prove another hypothesis.
+
+## Evaluate model
+```{r}
+  round(mean(height.res))
+```
+## Conclusion
+A straight line model should not be used because the plot of residuals vs fitted showed a parabola.
+
+# Task 4
+## Make quadratic
+```{r}
+  quad.lm = lm(Height~BHDiameter + I(BHDiameter ^ 2), data=spruce)
+```
+## Scatter plot with quadratic curve
+```{r}
+  coef(quad.lm)
+  plot(spruce)
+  myplot = function(x) {
+    quad.lm$coef[1] + quad.lm$coef[2] * x + quad.lm$coef[3] * x ^ 2
+  }
+  
+  curve(myplot, lwd=2, col="blue", add=TRUE)
+```
+
+## Find fitted values of quad.lm
+```{r}
+  quad.fit = fitted(quad.lm)
+```
+## Plot of residuals vs fitted using quad.lm
+```{r}
+  plot(quad.lm, which=1)
+```
+
+## Construct QQ plot
+```{r}
+  normcheck(quad.lm, shapiro.wilk = TRUE)
+```
+
+## P-Value and Conclusion
+  The p-value for this model is 0.684. We accept the NULL hypothesis that there is not much of a relationship between Height and BHDiameter.
+  
+# Task 5
+```{r}
+  summary(quad.lm)
+```
+## Beta Values
+B0 = 0.860896, B1 = 1.469592, B2 = -0.027457
+
+## Interval estimate of Beta Values
+```{r}
+  ciReg(quad.lm)
+```
+## Equation of fitted line
+Height = 0.860896 + 1.469592x + -0.027457x^2
+
+## Height Predictions
+```{r}
+  predict(quad.lm, data.frame(BHDiameter = c(15, 18, 20)))
+```
+## Comparison
+```{r}
+  predict(spruce.lm, data.frame(BHDiameter = c(15, 18, 20)))
+```
+## Value of Multiple R^2
+Quad.lm R^2
+```{r}
+  summary(quad.lm)$r.squared
+```
+Spruce.lm R^2
+```{r}
+  summary(spruce.lm)$r.squared
+```
+## Adjusted R^2
+```{r}
+  summary(quad.lm)$adj.r.squared
+  summary(spruce.lm)$adj.r.squared
+```
+The adjusted R squared of spruce.lm (0.6468) and quad.lm (0.7805) suggests that the quad.lm model is better.
+
+## Meaning of Multiple R^2
+Multiple R^2 repesents how well a model fits the given data.
+
+## Model with Most Variability in Height
+```{r}
+  summary(quad.lm)$r.squared
+  summary(quad.lm)$adj.r.squared
+  summary(spruce.lm)$r.squared
+  summary(spruce.lm)$adj.r.squared
+```
+Since quad.lm has greater R^2 and adjusted R^2 values than spruce.lm, it explains the most variability in Height.
+
+## Anova() to compare models
+```{r}
+  anova(spruce.lm, quad.lm)
+```
+The comparison shows that quad.lm better models the data because it has a smaller RSS.
+
+## TSS, MSS, RSS
+### TSS
+```{r}
+  TSS = with(spruce, sum((Height-mean(Height)) ^ 2))
+  TSS
+```
+### MSS
+```{r}
+  MSS = with(spruce, sum((quad.fit-mean(Height)) ^ 2))
+  MSS
+```
+### MSS/TSS
+```{r}
+  MSS/TSS
+```
+# Task 6
+## Cook's Plot
+```{r}
+  cooks20x(quad.lm, main="Cook's Distance plot for quad.lm")
+```
+
+## What is Cook's Distance
+Cook's distance is used to indicate influential data points. The greater the distance, the greater the influence.
+
+It can be used to find outliers in the data or indicate regions in the data where it would be beneficial to obtain more data points.
+
+## Cook's Distance for quad.lm
+The 24th data point in quad.lm is the most influential because it has the tallest height in the Cook's Distance plot.
+
+## quad2.lm
+```{r}
+  quad2.lm = lm(Height~BHDiameter + I(BHDiameter ^ 2), data=spruce[-24,])
+```
+## quad2.lm summary
+```{r}
+  summary(quad2.lm)
+```
+## Comparison with quad.lm
+```{r}
+  summary(quad.lm)
+```
+## Conclusion
+quad2.lm has smaller min, median, and max residuals.
+
+quad2.lm has greater R-squared and adjusted R-squared values.
+
+# Task 7
+## Proof
+Two lines with the point $x_k$
+$$
+  l_1 : y = \beta_0 + \beta_1x
+$$
+$$
+  l_2 : y = \beta_0 + \delta + (\beta_1 + \beta_2)x
+$$
+Plug in $x_k$ and set the equations equal to each other
+$$
+  y_k = \beta_0 + \beta_1x_k = \beta_0 + \delta + (\beta_1 + \beta_2)x_k
+$$
+Bring all variables to one side and distribut $x_k$
+$$
+  \beta_0 + \beta_1x_k - \beta_0 - \delta - \beta_1x_k - \beta_2x_k
+$$
+$\beta_0 + \beta_1x_k$ cancel, so
+$$
+  - \delta - \beta_2x_k
+$$
+Then,
+$$
+  \delta = - \beta_2x_k
+$$
+Go back to $l_2$ and substitute $\delta = - \beta_2x_k$
+$$
+  l_2 : y = \beta_0 - \beta_2x_k + (\beta_1 + \beta_2)x
+$$
+Distribute $x$
+$$
+  l_2 : y = \beta_0 - \beta_2x_k + \beta_1x + \beta_2x
+$$
+Rearrange
+$$
+  l_2 : y = \beta_0 + \beta_1x + \beta_2x - \beta_2x_k
+$$
+Factor out $\beta_2$
+$$
+  l_2 : y = \beta_0 + \beta_1x + \beta_2(x - x_k)
+$$
+This describes $l_2$ as an adjustment of $l_1$. We can use an indicator function to know when it should include the adjusment where I() is 1 when $x > x_k$ and 0 else.
+
+## Plot where $x_k = 18$
+```{r}
+  sp2 = within(spruce, X <- (BHDiameter - 18) * (BHDiameter > 18))
+  sp2
+  lm2 = lm(Height~BHDiameter + X, data = sp2)
+  tm2 = summary(lm2)
+  myf = function(x, coef) {
+    coef[1] + coef[2] * (x) + coef[3] * (x - 18) * (x - 18 > 0)
+  }
+  plot(spruce, main = "Piecewise regression")
+  myf(0, coef = tm2$coefficients[,"Estimate"])
+  curve(myf(x,coef=tm2$coefficients[,"Estimate"]), add=TRUE, lwd=2, col="blue")
+  abline(v=18)
+  text(18, 16, paste("R sq.=", round(tm2$r.squared, 4)))
+```
+
+# Task 8
+```{r}
+  library(MATH4753)
+  library(Intro2R)
+  with(ddt, scatterhist(LENGTH,WEIGHT, xlab="LENGTH"))
+```
+
+This function creates a sophisticated plot. The plot consists of a main scatter plot and two bar graphs on the axis. The scatter plot shows location of each data while the bar graphs shows the distribution of data for each variable on the axis.
